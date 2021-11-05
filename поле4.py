@@ -1,0 +1,384 @@
+import sys
+
+from random import choice
+from PyQt5 import uic
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
+from PyQt5.QtWidgets import QLabel, QLineEdit, QInputDialog, QColorDialog
+from typing import Callable
+
+ABC = list('abcdefghij')
+# size_btn = 25
+SIZE_BTN = 25
+
+class Sea_fight(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.all_flags = list()
+        self.boats = list()
+        self.setGeometry(100, 100, 800, 800)
+        self.setWindowTitle('one')
+        #
+        self.btn_make_boat = QPushButton('создать', self)
+        self.btn_make_boat.clicked.connect(self.make_twelve)
+        self.btn_make_boat.move(195, 280)
+
+        self.edit_xy = QLineEdit(self)
+        self.edit_xy.move(260, 0)
+        self.my_field()
+        self.enemy_field()
+        self.select_ships()
+
+
+
+
+        # 100500 переменных
+        self.four = list()
+        self.three = list()
+        self.two = list()
+        self.one = list()
+        self.but_of_boat = list()
+
+
+
+    def enemy_field(self):
+        # создание поля противника
+        self.buttons_pr = list()
+        for st in range(len(ABC)):
+            group = list()
+            for i in range(10):
+                self.btn = QPushButton('', self)
+                self.btn.resize(SIZE_BTN, SIZE_BTN)
+                self.btn.move((i + 1) * SIZE_BTN + 350, (st + 1) * SIZE_BTN)
+                group.append(self.btn)
+            self.buttons_pr.append(group)
+
+        for st in range(len(ABC)):
+            self.lbl = QLabel(self)
+            self.lbl.setText(ABC[st])
+            self.lbl.move(365, (st + 1) * 25)
+
+        for i in range(10):
+            self.lbl = QLabel(self)
+            self.lbl.setText(str(i))
+            self.lbl.move((i + 1) * SIZE_BTN + 360, 13)
+
+
+    def my_field(self):
+        # создание своего поля
+        self.buttons = list()
+        # size_btn = 25
+        for stolb in range(len(ABC)):
+            n_st = ABC[stolb]
+            group = list()
+            for i in range(10):
+                # n_st + str(i)
+                self.btn = QPushButton('', self)
+                self.btn.resize(SIZE_BTN, SIZE_BTN)
+                self.btn.move((i + 1) * SIZE_BTN, (stolb + 1) * SIZE_BTN)
+                group.append(self.btn)
+            self.buttons.append(group)
+        for st in range(len(ABC)):
+            self.lbl = QLabel(self)
+            self.lbl.setText(ABC[st])
+            self.lbl.move(18, (st + 1) * 25 + 5)
+
+        for i in range(10):
+            self.lbl = QLabel(self)
+            self.lbl.setText(str(i))
+            self.lbl.move((i + 1) * SIZE_BTN + 7, 14)
+
+
+    def select_ships(self):
+        for j in range(10):
+            for i in range(10):
+                self.buttons[j][i].clicked.connect(self.some_gen(j, i))
+
+
+
+    def some_gen(self, j: int, i: int) -> Callable:
+        def some():
+            # print(j, i)
+            color = '#ff007f'
+            if not [j, i] in self.boats:
+                self.boats.append([j, i])
+            # self.but_of_boat.append([j, i])
+            self.buttons[j][i].setStyleSheet("background-color: {}".format(color))
+        return some
+
+
+
+    def make_twelve(self):
+        # print(self.boats)
+        if len(self.boats) != 20:
+            self.flag = False
+        self.boats.sort()
+        # заполнение self.twelve
+        self.twelve = list()
+        self.twelve.append('000000000000')
+        for j in range(10):
+            line = list()
+            line.append('0')
+            for i in range(10):
+                if [j, i] in self.boats:
+                    line.append('1')
+                else:
+                    line.append('0')
+            line.append('0')
+            line = ''.join(line)
+            self.twelve.append(line)
+        self.step_two()
+
+    def step_two(self):
+        # передается список12
+        self.search4(self.twelve)
+        self.search3(self.twelve)
+        self.search2(self.twelve)
+        self.search1(self.twelve)
+        self.check_field()
+        self.btn_make_boat.clicked.connect(self.who_starts)
+
+
+    def who_starts(self):
+        begin, ok_pressed = QInputDialog.getItem(
+            self, "Выберите вашу страну", "Кто начинает игру?",
+            ("Я", "Мой противник", "Выбрать автоматически"), 1, False)
+        if begin == 'Я':
+            self.my_move()
+        elif begin == 'Мой противник':
+            self.opponent_move()
+
+    def my_move(self):
+        self.edit_xy.setText('my move')
+        for j in range(10):
+            for i in range(10):
+                self.buttons_pr[j][i].clicked.connect(self.some_gen1(j, i))
+
+
+    def some_gen1(self, j: int, i: int) -> Callable:
+        def some1():
+            self.buttons_pr[j][i].setText('.')
+            self.asking_answer(j, i)
+        return some1
+
+    def asking_answer(self, j, i):
+        answer, ok_pressed = QInputDialog.getItem(
+            self, "Ответ противника", "Ответ вашего проотивника",
+            ("Убил", "Мимо", "Ранил"), 1, False)
+        if answer == 'Мимо':
+            self.opponent_move()
+        else:
+            color = "#000000"
+            self.buttons_pr[j][i].setStyleSheet("background-color: {}".format(color))
+            if answer == 'Ранил':
+                self.opponent_move()
+            if answer == 'Убил':
+                list3 = [[j - 1, i - 1], [j - 1, i], [j - 1, i + 1], [j, i - 1], [j, i + 1],
+                            [j + 1, i - 1], [j + 1, i], [j + 1, i + 1]]
+                list4 = [x for x in list3 if (x[0] != 0 and x[1] != 0)]
+                for x in list4:
+                    self.buttons_pr[x[0]][x[1]].setText('.')
+
+    def opponent_move(self):
+        print(self.boats)
+        print(self.but_of_boat)
+        # изменить but_of_boats
+        for j in range(10):
+            for i in range(10):
+                self.buttons[j][i].clicked.connect(self.some_gen2(j, i))
+
+    def some_gen2(self, j: int, i: int) -> Callable:
+        def some2():
+            if [j, i] in self.boats:
+                color = "#000000"
+                self.buttons[j][i].setStyleSheet("background-color: {}".format(color))
+                list5 = list()
+                # изменяется self.boats
+                for x in self.but_of_boat:
+                    if [j, i] in x:
+                        x1 = [a for a in x if a != [j, i]]
+                        list5.append(x1)
+                    else:
+                        list5.append(x)
+                self.boats = list5
+            if [[j, i]] in self.but_of_boat:
+                self.edit_xy.setText('убил')
+                # если убил
+                color = "#000000"
+                self.buttons[j][i].setStyleSheet("background-color: {}".format(color))
+            else:
+                self.buttons_pr[j][i].setText('.')
+            self.my_move()
+
+        return some2
+
+
+    def search1(self, a1):
+        for b in range(4):
+            a = self.twelve
+            n = 1
+            some = list()
+            # по горизонтали
+            for j in range(len(a)):
+                for i in range(11 - n):
+                    if a[j][i] == '1':
+                        some = [[j, i]]
+                        print(j, i)
+            # по вертикали
+            if len(some) == 0:
+                for j in range(11 - n):
+                    for i in range(len(a)):
+                        if a[j][i] == '1':
+                            some = [[j, i]]
+            print(some)
+            self.one.append(some)
+            self.but_of_boat.append(some)
+            #
+            self.n_around(some)
+            self.change(some)
+
+    def search2(self, a1):
+        for b in range(3):
+            a = self.twelve
+            n = 1
+            some = list()
+            # по горизонтали
+            for j in range(len(a)):
+                for i in range(11 - n):
+                    if a[j][i] == a[j][i + 1] and a[j][i] == '1':
+                        some = [[j, i], [j, i + 1]]
+                        print(j, i)
+            # по вертикали
+            if len(some) == 0:
+                for j in range(11 - n):
+                    for i in range(len(a)):
+                        if a[j][i] == a[j + 1][i] and a[j][i] == '1':
+                            some = [[j, i], [j + 1, i]]
+            print(some)
+            self.two.append(some)
+            self.but_of_boat.append(some)
+            #
+            self.n_around(some)
+            self.change(some)
+
+
+    def search3(self, a1):
+        for b in range(2):
+            a = self.twelve
+            n = 2
+            some = list()
+            # по горизонтали
+            for j in range(len(a)):
+                for i in range(11 - n):
+                    if a[j][i] == a[j][i + 1] and a[j][i + 2] == '1':
+                        if a[j][i] == '1':
+                            some = [[j, i], [j, i + 1], [j, i + 2]]
+                            print(j, i)
+            # по вертикали
+            if len(some) == 0:
+                for j in range(11 - n):
+                    for i in range(len(a)):
+                        if a[j][i] == a[j + 1][i] and a[j + 2][i] == '1':
+                            if a[j][i] == '1':
+                                some = [[j, i], [j + 1, i], [j + 2, i]]
+            print(some)
+            self.three.append(some)
+            self.but_of_boat.append(some)
+            #
+            self.n_around(some)
+            self.change(some)
+
+    def search4(self, a):
+        # в результате выполнения этой функции мы получаем координаты корабля на 4 клетки
+        print(a)
+        n = 3
+        some = list()
+        # по горизонтали
+        for j in range(len(a)):
+            for i in range(11 - n):
+                if a[j][i] == a[j][i + 1] and a[j][i + 2] == a[j][i + 3]:
+                    if a[j][i] == '1' and a[j][i + 3] == '1':
+                        some = [[j, i], [j, i + 1], [j, i + 2], [j, i + 3]]
+        # по вертикали
+        if len(some) == 0:
+            for j in range(11 - n):
+                for i in range(len(a)):
+                    if a[j][i] == a[j + 1][i] and a[j + 2][i] == a[j + 3][i]:
+                        if a[j][i] == '1' and a[j + 3][i] == '1':
+                            some = [[j, i], [j + 1, i], [j + 2, i], [j + 3, i]]
+        # print(some)
+        self.four.append(some)
+        self.but_of_boat.append(some)
+        #
+        self.n_around(some)
+        self.change(some)
+
+
+    def change(self, list1):
+        # функция должна будет сделать замену елементам списка в в списке на 2
+        for x in list1:
+            for j in range(12):
+                if j == x[0]:
+                    some = self.twelve[j][:x[1]] + '2' + self.twelve[j][x[1] + 1:]
+                    #print(some)
+                    twelve1 = list()
+                    twelve1.extend(self.twelve[:j])
+                    twelve1.append(some)
+                    twelve1.extend(self.twelve[j + 1:])
+                    self.twelve = twelve1
+
+
+    def n_around(self, ship_xy):
+        # эта фуенция создает список с координатами вокруг ОДНОГО корабля
+        list1 = list()
+        for x in ship_xy:
+            list1.append([x[0] - 1, x[1] - 1])
+            list1.append([x[0], x[1] - 1])
+            list1.append([x[0] - 1, x[1]])
+            list1.append([x[0] - 1, x[1] + 1])
+            list1.append([x[0] + 1, x[1] - 1])
+            list1.append([x[0] + 1, x[1]])
+            list1.append([x[0], x[1] + 1])
+            list1.append([x[0] + 1, x[1] + 1])
+        list2 = [x for x in list1 if x not in ship_xy]
+        list2.sort()
+
+        self.check_0(list2)
+
+
+    def check_0(self, xy_around):
+        # функция проверят
+        fl = True
+        xy_around1 = [x for x in xy_around if (x[0] != 0) and (x[1] != 0)]
+        for x in xy_around1:
+            color = '#aa006a'
+            try:
+                # self.buttons[x[0] - 1][x[1] - 1].setStyleSheet("background-color: {}".format(color))
+                if self.twelve[x[0]][x[1]] != '0':
+                    fl = False
+                    break
+            except IndexError:
+                pass
+
+        self.all_flags.append(fl)
+        print(fl)
+
+    def check_field(self):
+        if len(self.one) == 4 and len(self.two) == 3 and len(self.three) == 2 and len(self.four) == 1:
+            self.btn_make_boat.setText('true')
+        # print(self.all_flags)
+
+
+
+def except_hook(cls, exception, traceback):
+    sys.__excepthook__(cls, exception, traceback)
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    form = Sea_fight()
+    form.show()
+    sys.excepthook = except_hook
+    sys.exit(app.exec())
