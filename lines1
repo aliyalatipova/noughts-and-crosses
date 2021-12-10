@@ -1,0 +1,112 @@
+import pygame
+import random
+
+RETREAT = 4
+COLORS = ['Blue', 'Red']
+
+
+class Board:
+    # создание поля
+    def __init__(self, width, height, left=10, top=10, cell_size=30):
+        self.width = width
+        self.height = height
+        self.board = [[0] * width for _ in range(height)]
+        # for row in range(self.height):
+            # for col in range(self.width):
+                # self.board[row][col] = random.randint(1, 2)
+
+        # значения по умолчанию
+        self.set_view(left, top, cell_size)
+        self.go = 2
+
+    def set_view(self, left, top, cell_size):
+        self.left = left
+        self.top = top
+        self.cell_size = cell_size
+
+    def render(self, screen):
+        for row in range(self.height):
+            for col in range(self.width):
+                pygame.draw.rect(screen, 'White', (self.left + col * self.cell_size,
+                                                   self.top + row * self.cell_size,
+                                                   self.cell_size, self.cell_size), 1)
+                if self.board[row][col] == 1:
+                    pygame.draw.circle(screen,
+                                       'Blue',
+                                       (self.left + col * self.cell_size + self.cell_size // 2,
+                                        self.top + row * self.cell_size + self.cell_size // 2),
+                                       self.cell_size // 2 - RETREAT, 0)
+                elif self.board[row][col] == 2:
+                    pygame.draw.circle(screen,
+                                       'Red',
+                                       (self.left + col * self.cell_size + self.cell_size // 2,
+                                        self.top + row * self.cell_size + self.cell_size // 2),
+                                       self.cell_size // 2 - RETREAT, 0)
+    def get_click(self, mouse_pos):
+        cell = self.get_cell(mouse_pos)
+        self.on_click(cell)
+
+    def get_cell(self, pos):
+        if 0 <= pos[0] - self.left < self.width * self.cell_size and \
+           0 <= pos[1] - self.top < self.width * self.cell_size:
+            return (pos[0] - self.left) // self.cell_size, (pos[1] - self.top) // self.cell_size
+        return None
+
+    def red_circle(self):
+        for row in range(self.height):
+            for col in range(self.width):
+                if self.board[row][col] == 2:
+                    return True
+        return False
+
+    def row_red_circle(self):
+        for row in range(self.height):
+            for col in range(self.width):
+                if self.board[row][col] == 2:
+                    return row
+
+
+    def col_red_circle(self):
+        for row in range(self.height):
+            for col in range(self.width):
+                if self.board[row][col] == 2:
+                    return col
+
+    def has_path(self, x1, y1, x2, y2):
+        some = list()
+        pass
+
+
+    def on_click(self, cell):
+        if cell:
+            c, r = cell[0], cell[1]
+            if self.board[r][c] == 0:
+                if self.red_circle():
+                    self.has_path(self.row_red_circle, self.col_red_circle, c, r)
+                else:
+                    self.board[r][c] = 1
+            elif self.board[r][c] == 1:
+                self.board[r][c] = 2
+            elif self.board[r][c] == 2:
+                self.board[r][c] = 1
+
+
+
+
+pygame.init()
+n = 8
+size = widht, height = 60 * (n + 2), 60 * (n + 2)
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption('Недореверси')
+board = Board(n, n, 60, 60, 60)
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            board.get_click(event.pos)
+    screen.fill((0, 0, 0))
+    board.render(screen)
+    pygame.display.flip()
+pygame.quit()
